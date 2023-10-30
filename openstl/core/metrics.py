@@ -134,7 +134,7 @@ def metric(pred, true, mean=None, std=None, metrics=['mae', 'mse'],
         true = true * std + mean
     eval_res = {}
     eval_log = ""
-    allowed_metrics = ['mae', 'mse', 'rmse', 'ssim', 'psnr', 'snr', 'lpips']
+    allowed_metrics = ['mae', 'mse', 'rmse', 'ssim', 'psnr', 'snr', 'lpips', "acc"]
     invalid_metrics = set(metrics) - set(allowed_metrics)
     if len(invalid_metrics) != 0:
         raise ValueError(f'metric {invalid_metrics} is not supported.')
@@ -177,6 +177,10 @@ def metric(pred, true, mean=None, std=None, metrics=['mae', 'mse'],
                                                        true[:, :, i*c_width: (i+1)*c_width, ...], spatial_norm)
                 rmse_sum += eval_res[f'rmse_{str(c_name)}']
             eval_res['rmse'] = rmse_sum / c_group
+
+    if "acc" in metrics:
+        # FIXME C x H x W , expects class to be in C dimension
+        eval_res["acc"] = torch.mean((pred.argmax(0) == true)).float().item()
 
     pred = np.maximum(pred, clip_range[0])
     pred = np.minimum(pred, clip_range[1])
