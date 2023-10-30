@@ -24,16 +24,18 @@ try:
 except ImportError: 
     has_nni = False
 
+from typing import Callable
+
 
 class BaseExperiment(object):
     """The basic class of PyTorch training and evaluation."""
 
-    def __init__(self, args, dataloaders=None):
+    def __init__(self, args, dataloaders=None, *, method: Callable=None):
         """Initialize experiments (non-dist as an example)"""
         self.args = args
         self.config = self.args.__dict__
         self.device = self.args.device
-        self.method = None
+        self.method = method
         self.args.method = self.args.method.lower()
         self._epoch = 0
         self._iter = 0
@@ -144,7 +146,8 @@ class BaseExperiment(object):
 
     def _build_method(self):
         self.steps_per_epoch = len(self.train_loader)
-        self.method = method_maps[self.args.method](self.args, self.device, self.steps_per_epoch)
+        if self.method is None:
+            self.method = method_maps[self.args.method](self.args, self.device, self.steps_per_epoch)
         self.method.model.eval()
         # setup ddp training
         if self._dist:
