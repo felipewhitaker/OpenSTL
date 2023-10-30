@@ -148,6 +148,8 @@ class BaseExperiment(object):
         self.steps_per_epoch = len(self.train_loader)
         if self.method is None:
             self.method = method_maps[self.args.method](self.args, self.device, self.steps_per_epoch)
+        else:
+            self.method = self.method(self.args, self.device, self.steps_per_epoch)
         self.method.model.eval()
         # setup ddp training
         if self._dist:
